@@ -1,88 +1,75 @@
-import { Component } from 'react';
+import { useEffect } from 'react';
+import { useState } from 'react';
 import { ContactForm } from '../ContactForm/ContactForm';
 import { ContactList } from '../ContactList/ContactList';
 import { Filter } from '../Filter/Filter';
 import { Container, Message, Title1, Title2, Wrapper } from './App.styled';
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+export const App = () => {
+  const [contacts, setContacts] = useState([]);
+  const [filter, setFilter] = useState('');
 
-  componentDidMount = () => {
-    const contacts = JSON.parse(localStorage.getItem('contacts'));
-    if (contacts) {
-      this.setState({ contacts });
-    }
-  };
+  useEffect(() => {
+    const contactsLS = JSON.parse(localStorage.getItem('contacts'));
+    contactsLS && setContacts(contactsLS);
+  }, []);
 
-  componentDidUpdate = (_, prevState) => {
-    const { contacts } = this.state;
-    if (contacts !== prevState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  };
+  useEffect(() => {
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-  formSubmitHandler = newContact => {
-    const matchedContact = this.state.contacts.find(
+  const formSubmitHandler = newContact => {
+    const matchedContact = contacts.find(
       ({ name }) => name.toLowerCase() === newContact.name.toLowerCase()
     );
     if (matchedContact) {
       alert(`${newContact.name} is already in contacts.`);
       return;
     }
-    this.setState(prevState => {
-      return { contacts: [...prevState.contacts, newContact] };
-    });
+    setContacts([...contacts, newContact]);
   };
 
-  filterHandler = filterQuery => {
-    this.setState({ filter: filterQuery });
+  const filterHandler = filterQuery => {
+    setFilter(filterQuery);
   };
 
-  contactDeleteHandler = idToDelete => {
-    this.setState(prevState => {
-      const newContactsArr = [...prevState.contacts].filter(
+  const contactDeleteHandler = idToDelete => {
+    setContacts(() => {
+      const newContactsArr = [...contacts].filter(
         ({ id }) => id !== idToDelete
       );
-      return { contacts: newContactsArr };
+      return newContactsArr;
     });
   };
 
-  render() {
-    const filteredContacts = this.state.contacts.filter(({ name }) =>
-      name.toLowerCase().includes(this.state.filter.toLowerCase())
-    );
+  const filteredContacts = contacts.filter(({ name }) =>
+    name.toLowerCase().includes(filter.toLowerCase())
+  );
 
-    return (
-      <Container>
-        <Title1>Phonebook</Title1>
-        <ContactForm onSubmit={this.formSubmitHandler} />
-        <Title2>Contacts</Title2>
-        <Wrapper>
-          {this.state.contacts.length > 0 ? (
-            <>
-              <Filter
-                filter={this.state.filter}
-                onChange={this.filterHandler}
+  return (
+    <Container>
+      <Title1>Phonebook</Title1>
+      <ContactForm onSubmit={formSubmitHandler} />
+      <Title2>Contacts</Title2>
+      <Wrapper>
+        {contacts.length > 0 ? (
+          <>
+            <Filter filter={filter} onChange={filterHandler} />
+            {filteredContacts.length > 0 ? (
+              <ContactList
+                contacts={filteredContacts}
+                onDeleteContact={contactDeleteHandler}
               />
-              {filteredContacts.length > 0 ? (
-                <ContactList
-                  contacts={filteredContacts}
-                  onDeleteContact={this.contactDeleteHandler}
-                />
-              ) : (
-                <Message>
-                  Sorry, we didn't find any contacts matching your query
-                </Message>
-              )}
-            </>
-          ) : (
-            <Message>You don't have any contacts yet</Message>
-          )}
-        </Wrapper>
-      </Container>
-    );
-  }
-}
+            ) : (
+              <Message>
+                Sorry, we didn't find any contacts matching your query
+              </Message>
+            )}
+          </>
+        ) : (
+          <Message>You don't have any contacts yet</Message>
+        )}
+      </Wrapper>
+    </Container>
+  );
+};
