@@ -6,13 +6,10 @@ import { Filter } from '../Filter/Filter';
 import { Container, Message, Title1, Title2, Wrapper } from './App.styled';
 
 export const App = () => {
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState(
+    () => JSON.parse(localStorage.getItem('contacts')) ?? []
+  );
   const [filter, setFilter] = useState('');
-
-  useEffect(() => {
-    const contactsLS = JSON.parse(localStorage.getItem('contacts'));
-    contactsLS && setContacts(contactsLS);
-  }, []);
 
   useEffect(() => {
     localStorage.setItem('contacts', JSON.stringify(contacts));
